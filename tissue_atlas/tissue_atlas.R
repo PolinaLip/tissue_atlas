@@ -1,0 +1,187 @@
+library(shiny)
+library(tidyr)
+library(ggplot2)
+library(WGCNA)
+
+### UI #################
+
+ui <- fluidPage( # pageWithSidebar is deprecated -> use fluidPage (layout consists of rows which in turn include columns)
+  fluidRow(  
+    # App title ----
+    headerPanel(HTML(paste0('Proteins in tissues of ', em('E. verrucosus')))), # em() - italic, strong() - bold
+  ),
+  fluidRow(
+  # Sidebar panel for inputs ----
+  sidebarPanel(width = 10,
+    # Input: the name of a protein to look on it in different tissues
+    textInput(inputId = 'protein_name', 
+              label = 'Protein name', 
+              placeholder = 'PRSS1, Hsp83, etc.')
+    ,
+    # Input: the name of a tracnsript name from protein group to look on it \
+    # in different tissues
+    textInput(inputId = 'transcript_name',
+              label = 'Transcript name',
+              placeholder = 'TRINITY_DN72713_c0_g1_i3, NODE_1000_length_6307_cov_181.502237_g640_i1, etc.')   
+    )
+  ),
+  fluidRow(
+  # Main panel for displaying outputs ----
+  mainPanel(width = 10,
+    h3(textOutput("caption")), # h3 - type of a header
+    plotOutput("heatmap")
+  )
+)
+)
+### Server ###########
+server_job <- function(input, output){
+  
+  ## To make a reactive expression (will be updated whenever the original widget changes)
+  proteinText <- reactive({
+    paste0('Protein(s) ', 
+           input$protein_name, # the value from ui
+           ' in tissues:')
+  })
+  
+  output$caption <- renderText({
+    proteinText()
+  })
+  ## To prepare dataset with a chosen protein
+  dat <- reactive({
+    
+    # Check if the protein name is in the dataset:
+    validate(need(any(grepl(input$protein_name, data_tissues_long$annotation, 
+                        ignore.case = T)) & 
+                  any(grepl(input$transcript_name, data_tissues_long$protein_group_name, 
+                        ignore.case = T)) , 
+                  'The dataset does not have the required protein!'))
+    
+    # Filter the dataset:
+    #print(input$transcript_name)
+    if (isTruthy(input$protein_name)) {
+      print(input$protein_name)
+      data_to_plot <- data_tissues_long[grepl(input$protein_name,
+                                              data_tissues_long$annotation, 
+                                              ignore.case = T),]
+    } else if (isTruthy(input$transcript_name)) {
+      print(input$transcript_name)
+      data_to_plot <- data_tissues_long[grepl(input$transcript_name,
+                                              data_tissues_long$protein_group_name, 
+                                              ignore.case = T),]
+    }
+    
+    data_to_plot_short <- data_to_plot %>%
+      pivot_wider(!c(tissue_general,sex), values_from = intensity, 
+                  names_from = tissue) %>%
+      as.data.frame()
+    rownames(data_to_plot_short) <- data_to_plot_short$protein_group_name
+    data_to_plot_short <- data_to_plot_short[-c(1,2)]
+    ## to clust proteins in heatmap (by intensity)
+    if (nrow(data_to_plot_short) > 1){
+     row_dist <- dist(tidyr::replace_na(as.matrix(data_to_plot_short), 0))
+     row_clust <- hclust(row_dist)
+     data_to_plot_short <- data_to_plot_short[row_clust$order,]
+     protein_order <- unique(rownames(data_to_plot_short))
+    }
+    ##
+    data_to_plot_long <- data_to_plot_short %>%
+      rownames_to_column('protein_group_name') %>%
+      pivot_longer(-protein_group_name, values_to = 'intensity', 
+                   names_to = 'tissue')
+    if (nrow(data_to_plot_short) > 1){
+     data_to_plot_long$protein_group_name <- factor(data_to_plot_long$protein_group_name,
+                                                   levels = protein_order)
+    }
+    data_to_plot_long$tissue <- factor(data_to_plot_long$tissue,
+                                       levels = tissue_order)
+    data_to_plot_long
+  })
+  
+  ## To plot heatmap of a chosen protein
+  output$heatmap <- renderPlot({
+    validate(need(input$protein_name != "" | input$transcript_name != "", 
+             'Please type a protein or transcript name'))
+    ggplot(dat(), aes(tissue, protein_group_name, fill = intensity)) +
+      geom_tile() +
+      geom_vline(xintercept = x_last_dup + 0.5) +
+      scale_fill_gradientn('Intensity:  ', 
+                           colors = blueWhiteRed(50)) +
+      scale_x_discrete('Tissue', labels = x_labels) +
+      scale_y_discrete('Protein', labels = function(x) pg_to_annot[x], 
+                       expand = expansion(add = c(0,1.5))) +
+      annotate(geom = "text", label = sex_order_symbols, 
+               x = c(1:length(unique(dat()$tissue))), 
+               y = length(unique(dat()$protein_group_name))+1) +
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  })
+}
+
+#### Data preprocessing ######
+
+### Upload data with intensities
+
+data_tissues <- 
+  read.csv(file = 'intensities_wo_EggsOutliers.csv', '\t', header = T)
+
+### Upload annotation data
+
+pg_annotation <- 
+  read.csv('annot_proteinGroups_tissues_withGOannotation.csv',
+           sep = '\t', header = T)
+
+### Upload metafile
+
+metafile <- 
+  read.delim('Metadata_Proteus.tsv', 
+             header=TRUE, sep="\t")
+metafile <- subset(metafile, condition != 'pool' & sample != 'eggs_mix1' & sample != 'eggs_mix5')
+metafile[metafile$condition == 'keep_legs',]$condition <- 'posterior gnathopods'
+
+### Prepare datasets
+rownames(data_tissues) <- data_tissues$protein_group
+data_tissues <- data_tissues[,c(1:length(data_tissues)-1)]
+
+data_tissues_long <- data_tissues %>%
+  rownames_to_column(var = 'protein_group_name') %>%
+  pivot_longer(-protein_group_name, values_to = 'intensity', 
+               names_to = 'tissue')
+
+data_tissues_long$annotation <- 
+  pg_annotation[match(data_tissues_long$protein_group_name, 
+                      pg_annotation$protein_group),]$upd_full_annot
+data_tissues_long$annotation <- 
+  sub('PREDICTED: |-like|LOW QUALITY PROTEIN: | isoform X\\d+', '', 
+      data_tissues_long$annotation)
+data_tissues_long$annotation <- 
+  sub('PREDICTED: |-like|LOW QUALITY PROTEIN: | isoform X\\d+', '', 
+      data_tissues_long$annotation)
+
+data_tissues_long$tissue_general <- 
+  metafile[match(data_tissues_long$tissue, metafile$sample),]$condition
+
+data_tissues_long$sex <- 
+  metafile[match(data_tissues_long$tissue, metafile$sample),]$sex
+
+tissue_order <- unique(data_tissues_long$tissue[order(data_tissues_long$tissue_general,
+                                                      data_tissues_long$sex)])
+data_tissues_long$tissue <- factor(data_tissues_long$tissue,
+    levels = tissue_order)
+
+sample_to_tissue <- select(data_tissues_long, tissue, tissue_general) %>% deframe()
+x_labels <- sample_to_tissue[levels(data_tissues_long$tissue)]
+x_dup_ixs <- duplicated(x_labels)
+x_labels[x_dup_ixs] <- ''
+x_last_dup <- which(diff(x_dup_ixs) == -1)
+#x_labels[x_last_dup] <- '——————————'
+
+pg_to_annot <- select(data_tissues_long, protein_group_name, annotation) %>% deframe()
+
+sex_order <- 
+  meta[match(names(sample_to_tissue[levels(data_tissues_long$tissue)]), 
+             meta$sample),]$sex
+sex_order_symbols <- ifelse(sex_order == 'female', intToUtf8(9792), intToUtf8(9794))
+
+### Launch the app #############
+shinyApp(ui, server_job)
+

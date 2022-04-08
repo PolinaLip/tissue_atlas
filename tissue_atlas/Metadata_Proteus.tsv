@@ -1,0 +1,67 @@
+experiment	measure	sample	condition	replicate	sex
+1	Reporter intensity 1	pool_1	pool	1	
+1	Reporter intensity 2	eggs_mix5	eggs	1	female
+1	Reporter intensity 3	g2_legs_IL1	legs	1	female
+1	Reporter intensity 4	g2_antennas_IL2	antennas	1	female
+1	Reporter intensity 5	g1_legs_IL3	legs	2	male
+1	Reporter intensity 6	g2_keep_legs_IL3	keep_legs	1	female
+2	Reporter intensity 1	pool_2	pool	2	
+2	Reporter intensity 2	g1_hepatop_IL3	hepatopancreas	1	male
+2	Reporter intensity 3	g2_muscle_IL3	muscle	1	female
+2	Reporter intensity 4	g2_antennas_IL1	antennas	2	female
+2	Reporter intensity 5	g2_hepatop_IL2	hepatopancreas	2	female
+2	Reporter intensity 6	g1_muscle_IL2	muscle	2	male
+3	Reporter intensity 1	pool_3	pool	3
+3	Reporter intensity 2	g2_hepatop_IL1	hepatopancreas	3	female
+3	Reporter intensity 3	g2_head_IL3_1	head	1	female
+3	Reporter intensity 4	g2_muscle_IL1	muscle	3	female
+3	Reporter intensity 5	g1_muscle_IL3	muscle	4	male
+3	Reporter intensity 6	g1_keep_legs_IL2	keep_legs	2	male
+4	Reporter intensity 1	pool_4	pool	4	
+4	Reporter intensity 2	g2_head_IL3_2	head	2	female
+4	Reporter intensity 3	g2_muscle_IL2	muscle	5	female
+4	Reporter intensity 4	g1_muscle_IL1	muscle	6	male
+4	Reporter intensity 5	g2_gills_IL1	gills	1	female
+4	Reporter intensity 6	eggs_mix7	eggs	2	female
+5	Reporter intensity 1	pool_5	pool	5	
+5	Reporter intensity 2	g2_head_IL3_3	head	3	female
+5	Reporter intensity 3	g1_gills_IL3	gills	2	male
+5	Reporter intensity 4	g2_eggs_IL3	eggs	3	female
+5	Reporter intensity 5	g1_legs_IL1	legs	3	male
+5	Reporter intensity 6	g1_hepatop_IL1	hepatopancreas	4	male
+6	Reporter intensity 1	pool_6	pool	6	
+6	Reporter intensity 2	g2_head_IL3_4	head	4	female
+6	Reporter intensity 3	g1_legs_IL2	legs	4	male
+6	Reporter intensity 4	eggs_mix1	eggs	4	female
+6	Reporter intensity 5	g2_legs_IL2_1	legs	5	female
+6	Reporter intensity 6	g1_antennas_IL1_1	antennas	3	male
+7	Reporter intensity 1	pool_7	pool	7	
+7	Reporter intensity 2	g2_gills_IL3	gills	3	female
+7	Reporter intensity 3	g2_legs_IL2_2	legs	6	female
+7	Reporter intensity 4	g2_antennas_IL3	antennas	4	female
+7	Reporter intensity 5	g1_eggs_IL1	eggs	5	female
+7	Reporter intensity 6	g2_keep_legs_IL1	keep_legs	3	female
+8	Reporter intensity 1	pool_8	pool	8	
+8	Reporter intensity 2	eggs_mix2	eggs	6	female
+8	Reporter intensity 3	g1_keep_legs_IL3	keep_legs	4	male
+8	Reporter intensity 4	g1_gills_IL2	gills	4	male
+8	Reporter intensity 5	g1_head_IL2_1	head	5	male
+8	Reporter intensity 6	g2_hepatop_IL3	hepatopancreas	5	female
+9	Reporter intensity 1	pool_9	pool	9	
+9	Reporter intensity 2	g1_eggs_IL2	eggs	7	female
+9	Reporter intensity 3	g1_head_IL2_2	head	6	male
+9	Reporter intensity 4	g1_antennas_IL2	antennas	5	male
+9	Reporter intensity 5	g2_keep_legs_IL2	keep_legs	5	female
+9	Reporter intensity 6	g1_hepatop_IL2	hepatopancreas	6	male
+10	Reporter intensity 1	pool_10	pool	10	
+10	Reporter intensity 2	g1_head_IL2_3	head	7	male
+10	Reporter intensity 3	eggs_mix6	eggs	8	female
+10	Reporter intensity 4	g2_gills_IL2	gills	5	female
+10	Reporter intensity 5	g1_gills_IL1	gills	6	male
+10	Reporter intensity 6	g1_antennas_IL1_2	antennas	6	male
+11	Reporter intensity 1	pool_11	pool	11	
+11	Reporter intensity 2	g1_head_IL2_4	head	8	male
+11	Reporter intensity 3	g2_head_IL2_1	head	9	female
+11	Reporter intensity 4	g2_head_IL2_2	head	10	female
+11	Reporter intensity 5	g1_head_IL3	head	11	male
+11	Reporter intensity 6	g1_keep_legs_IL1	keep_legs	6	male
