@@ -2,6 +2,8 @@ library(shiny)
 library(tidyr)
 library(ggplot2)
 library(WGCNA)
+library(tibble)
+library(dplyr)
 
 ### UI #################
 
@@ -62,6 +64,9 @@ server_job <- function(input, output){
       print(input$protein_name)
       data_to_plot <- data_tissues_long[grepl(input$protein_name,
                                               data_tissues_long$annotation, 
+                                              ignore.case = T) | 
+                                        grepl(input$protein_name,
+                                              data_tissues_long$diamond_best_hit,
                                               ignore.case = T),]
     } else if (isTruthy(input$transcript_name)) {
       print(input$transcript_name)
@@ -75,7 +80,7 @@ server_job <- function(input, output){
                   names_from = tissue) %>%
       as.data.frame()
     rownames(data_to_plot_short) <- data_to_plot_short$protein_group_name
-    data_to_plot_short <- data_to_plot_short[-c(1,2)]
+    data_to_plot_short <- data_to_plot_short[-c(1,2,3)]
     ## to clust proteins in heatmap (by intensity)
     if (nrow(data_to_plot_short) > 1){
      row_dist <- dist(tidyr::replace_na(as.matrix(data_to_plot_short), 0))
@@ -150,6 +155,10 @@ data_tissues_long <- data_tissues %>%
 data_tissues_long$annotation <- 
   pg_annotation[match(data_tissues_long$protein_group_name, 
                       pg_annotation$protein_group),]$upd_full_annot
+data_tissues_long$diamond_best_hit <- 
+  pg_annotation[match(data_tissues_long$protein_group_name, 
+                      pg_annotation$protein_group),]$diamond_annot
+  
 data_tissues_long$annotation <- 
   sub('PREDICTED: |-like|LOW QUALITY PROTEIN: | isoform X\\d+', '', 
       data_tissues_long$annotation)
@@ -178,8 +187,8 @@ x_last_dup <- which(diff(x_dup_ixs) == -1)
 pg_to_annot <- select(data_tissues_long, protein_group_name, annotation) %>% deframe()
 
 sex_order <- 
-  meta[match(names(sample_to_tissue[levels(data_tissues_long$tissue)]), 
-             meta$sample),]$sex
+  metafile[match(names(sample_to_tissue[levels(data_tissues_long$tissue)]), 
+             metafile$sample),]$sex
 sex_order_symbols <- ifelse(sex_order == 'female', intToUtf8(9792), intToUtf8(9794))
 
 ### Launch the app #############
