@@ -141,7 +141,7 @@ server_job <- function(input, output){
              input$chosen_tissue, ' with GS >= ' , input$gs_threshold, 
              ':'), 
       paste0('Protein(s) in tissues ', 
-             input$chosen_tissue, ' with GS < ' , input$gs_threshold, 
+             input$chosen_tissue, ' with GS < -' , input$gs_threshold, 
              ':'))
     } else {
       'Protein(s) in tissues:'
@@ -153,13 +153,6 @@ server_job <- function(input, output){
   })
   ## To prepare dataset with a chosen protein
   dat <- reactive({
-    
-    # Check if the protein name is in the dataset:
-    #validate(need(any(grepl(input$protein_name, data_tissues_long$annotation, 
-    #                    ignore.case = T)) |
-    #              any(grepl(input$transcript_name, data_tissues_long$protein_group_name, 
-    #                    ignore.case = T)) , 
-    #              'The dataset does not have the required protein!'))
     
     # Filter the dataset:
 
@@ -184,7 +177,13 @@ server_job <- function(input, output){
     } else if (isTruthy(input$chosen_tissue)) {
       tissue_to_draw <- paste0('GS.', input$chosen_tissue)
       inx_col <- which(colnames(wgcna_results) == tissue_to_draw)
-      wgcna_subset <- wgcna_results[wgcna_results[inx_col] >= input$gs_threshold,]
+      wgcna_subset <- 
+        if (input$correlation_sign == 'Positive (>= 0)') {
+          wgcna_results[wgcna_results[inx_col] >= input$gs_threshold,]
+        } else {
+          wgcna_results[wgcna_results[inx_col] < -input$gs_threshold,]
+        }
+               
       validate(need(nrow(wgcna_subset) > 0, 
       'There is no proteins with the chosen GS threshold for selected tissue! Try to decrease the threshold'))
       #print(nrow(wgcna_subset))
