@@ -4,6 +4,7 @@ library(ggplot2)
 library(WGCNA)
 library(tibble)
 library(dplyr)
+library(viridis)
 
 #### Data preprocessing ######
 
@@ -118,11 +119,15 @@ ui <- fluidPage( # pageWithSidebar is deprecated -> use fluidPage (layout consis
                   label = 'GS threshold',
                   min = 0, max = 1, value = 0.6)
     )),
+  fluidRow(sidebarPanel(
+    downloadButton('downloadPlot', 'Download Plot')
+  )),
   fluidRow(
   # Main panel for displaying outputs ----
   mainPanel(width = 10,
     h3(textOutput("caption")), # h3 - type of a header
-    plotOutput("heatmap")
+    #plotOutput("heatmap")
+    uiOutput("plot.ui")
   )
 )
 )
@@ -218,15 +223,18 @@ server_job <- function(input, output){
     data_to_plot_long
   })
   
+  plotHeight <- reactive({
+    min(max(length(unique(dat()$protein_group_name)) * 30, 150), 10000)})
+  
   ## To plot heatmap of a chosen protein
-  output$heatmap <- renderPlot({
-    validate(need(input$protein_name != "" | input$transcript_name != "" | input$chosen_tissue != "", 
-             'Please type a protein/transcript name or choose a tissue'))
+
+  plot_reactive <- reactive({
     ggplot(dat(), aes(tissue, protein_group_name, fill = intensity)) +
       geom_tile() +
       geom_vline(xintercept = x_last_dup + 0.5) +
-      scale_fill_gradientn('Intensity:  ', 
-                           colors = blueWhiteRed(50)) +
+      #scale_fill_gradientn('Intensity:  ', 
+      #                     colors = blueWhiteRed(50)) +
+      scale_fill_viridis('Intensity:  ', na.value="white") +
       scale_x_discrete('Tissue', labels = x_labels) +
       scale_y_discrete('Protein', labels = function(x) pg_to_annot[x], 
                        expand = expansion(add = c(0,1.5))) +
@@ -236,6 +244,27 @@ server_job <- function(input, output){
       theme_light() +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
   })
+  
+  output$heatmap <- renderPlot({
+      print(plot_reactive())
+  })
+  
+  output$plot.ui <- renderUI({
+    validate(need(input$protein_name != "" | input$transcript_name != "" | input$chosen_tissue != "", 
+                  'Please type a protein/transcript name or choose a tissue'))
+    plotOutput("heatmap", height = plotHeight())
+  })
+  
+  output$downloadPlot <- downloadHandler(
+    filename = 'plot_from_shiny.png',
+    content = function(file) {
+      #device <- function(..., width, height) {
+      #  grDevices::png(..., width = width, height = height,
+      #                 res = 300, units = "in")
+      #}
+      ggsave(file, plot_reactive(), height = min(max(plotHeight()/70, 2.5), 30), 
+             width = 12)
+    })
 }
 
 ### Launch the app #############
